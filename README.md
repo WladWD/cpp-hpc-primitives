@@ -166,20 +166,21 @@ All numbers below are from a local development machine; they are intended to sho
 relative speedups rather than absolute limits. Exact hardware and compiler flags
 are recorded in the benchmark output.
 
-| Component                 | Operations/sec | CPU time (ns) | Baseline                    |
-|---------------------------|----------------|---------------|-----------------------------|
-| `std::queue`              |   722.57 M/s   | 1417 ns       | –                           |
-| `hpc::SPSCQueue`          | 1.04332 G/s    | 981 ns        | 1.44x vs `std::queue`       |
-| `malloc`                  |    99.90 M/s   | 10250 ns      | –                           |
-| `hpc::arena_allocator`    |  440.74 M/s    | 2323 ns       | 4.41x vs `malloc`           |
-| `hpc::pool_allocator`     |  586.01 M/s    | 1747 ns       | 5.87x vs `malloc`           |
-| `std::mutex` (contended)  |    1.53 G/s    | 42745 ns*     | –                           |
-| `hpc::TTASSpinLock`       |    2.43 G/s    | 26960 ns*     | 1.59x vs `std::mutex`       |
+| Component                 | Operations/sec | Wall time (ns) | CPU time (ns) | Baseline                    |
+|---------------------------|----------------|----------------|---------------|-----------------------------|
+| `std::queue`              |   722.57 M/s   | 1417 ns        | 1417 ns       | –                           |
+| `hpc::SPSCQueue`          | 1.04332 G/s    | 982 ns         | 981 ns        | 1.44x vs `std::queue`       |
+| `malloc`                  |    99.90 M/s   | 10257 ns       | 10250 ns      | –                           |
+| `hpc::arena_allocator`    |  440.74 M/s    | 2323 ns        | 2323 ns       | 4.41x vs `malloc`           |
+| `hpc::pool_allocator`     |  586.01 M/s    | 1748 ns        | 1747 ns       | 5.87x vs `malloc`           |
+| `std::mutex` (contended)  |    1.53 G/s    | 1855499 ns*    | 42745 ns*     | –                           |
+| `hpc::TTASSpinLock`       |    2.43 G/s    | 244258 ns*     | 26960 ns*     | 1.59x vs `std::mutex`       |
 
 `*` Spinlock vs `std::mutex` numbers are from a contended critical-section benchmark
 (`benchmarks/bench_spinlock.cpp`) with multiple threads incrementing a shared
 counter; the absolute nanoseconds include benchmark harness overhead and should
-be interpreted relatively.
+be interpreted relatively. Wall time reflects end-to-end duration including
+blocking/scheduling; CPU time reflects active CPU work per iteration.
 
 These numbers are not synthetic micro‑optimizations; they map directly to real workloads:
 
