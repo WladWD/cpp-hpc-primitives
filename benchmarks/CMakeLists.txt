@@ -1,6 +1,7 @@
 add_executable(hpc_benchmarks
     bench_queue.cpp
     bench_allocator.cpp
+    bench_spinlock.cpp
 )
 
 target_link_libraries(hpc_benchmarks PRIVATE
