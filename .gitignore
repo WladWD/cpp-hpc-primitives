@@ -1,41 +1,102 @@
-# Prerequisites
-*.d
+# gitignore for C++ projects (CMake, CLion, Visual Studio) + common OS/editors/python
 
-# Compiled Object files
-*.slo
-*.lo
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.idea/
+*.iml
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# CLion / CMake
+cmake-build-*/
+cmake-build-debug/
+CMakeCache.txt
+CMakeFiles/
+CTestTestfile.cmake
+cmake_install.cmake
+Makefile
+
+# Build directories (common)
+build/
+out/
+dist/
+results/
+
+# Compiled object files
 *.o
 *.obj
+*.lo
+*.slo
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
-# Compiled Dynamic libraries
+# Static / dynamic libraries
+*.a
+*.lib
+*.la
+*.lai
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
 
 # Executables
 *.exe
 *.out
 *.app
 
-# debug information files
+# Debug / profiling
+*.pdb
 *.dwo
+*.dSYM/
+*.prof
+*.gcda
+*.gcno
+*.gcov
+
+# Coverage / Test reports
+coverage/
+*.lcov
+*.coverage
+test-results/
+*.tap
+
+# Packaging / archives
+*.tar
+*.tar.gz
+*.zip
+*.7z
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*~
+*.swp
+
+# Generated files
+compile_commands.json
+*.cmd
+*.make
+
+# Visual Studio
+*.sln
+*.vcxproj*
+*.user
+*.suo
+*.userosscache
+*.cache
+
+# Python (project includes python)
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+ENV/
+.env
+
+# Misc
+tags
+.idea_modules/
+.externalNativeBuild/
