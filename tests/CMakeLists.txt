@@ -3,6 +3,7 @@ add_executable(hpc_tests
     test_arena_allocator.cpp
     test_pool_allocator.cpp
     test_ttas_spinlock.cpp
+    test_mpmc_ring_buffer.cpp
 )
 
 target_link_libraries(hpc_tests PRIVATE
@@ -12,4 +13,3 @@ target_link_libraries(hpc_tests PRIVATE
 
 include(GoogleTest)
 gtest_discover_tests(hpc_tests)
-
