@@ -17,7 +17,7 @@ behavior, memory ordering, and observability.
   data paths over generality. All hot paths are `noexcept` and branch‑light.
 - **Predictable memory**: Arena and pool allocators avoid `malloc`/`free`
   variability and keep data contiguous in L1.
-- **Cache coherency aware**: Cache line padding, power‑of‑two ring sizes, and
+- **Cache coherency aware**: Cache line padding, power-of-two ring sizes, and
   TTAS spinlocks minimize false sharing and unnecessary cache line invalidations.
 - **Explicit memory ordering**: Atomics use the weakest ordering that is still
   correct (`memory_order_relaxed` vs `acquire/release`), with comments explaining
@@ -166,21 +166,42 @@ All numbers below are from a local development machine; they are intended to sho
 relative speedups rather than absolute limits. Exact hardware and compiler flags
 are recorded in the benchmark output.
 
-| Component                 | Operations/sec | Wall time (ns) | CPU time (ns) | Baseline                    |
-|---------------------------|----------------|----------------|---------------|-----------------------------|
-| `std::queue`              |   722.57 M/s   | 1417 ns        | 1417 ns       | –                           |
-| `hpc::SPSCQueue`          | 1.04332 G/s    | 982 ns         | 981 ns        | 1.44x vs `std::queue`       |
-| `malloc`                  |    99.90 M/s   | 10257 ns       | 10250 ns      | –                           |
-| `hpc::arena_allocator`    |  440.74 M/s    | 2323 ns        | 2323 ns       | 4.41x vs `malloc`           |
-| `hpc::pool_allocator`     |  586.01 M/s    | 1748 ns        | 1747 ns       | 5.87x vs `malloc`           |
-| `std::mutex` (contended)  |    1.53 G/s    | 1855499 ns*    | 42745 ns*     | –                           |
-| `hpc::TTASSpinLock`       |    2.43 G/s    | 244258 ns*     | 26960 ns*     | 1.59x vs `std::mutex`       |
+| Component                          | Operations/sec | Wall time (ns) | CPU time (ns) | Baseline                         |
+|------------------------------------|----------------|--------------|-------------|----------------------------------|
+| `std::queue` (SPSC baseline)       |   719.83 M/s   | 1423 ns      | 1423 ns     | –                                |
+| `hpc::SPSCQueue`                   | 1.05306 G/s    | 973 ns       | 972 ns      | 1.46x vs `std::queue`            |
+| `malloc`                           |    96.24 M/s   | 10642 ns     | 10640 ns    | –                                |
+| `hpc::arena_allocator`             |  437.73 M/s    | 2340 ns      | 2339 ns     | 4.55x vs `malloc`                |
+| `hpc::pool_allocator`              |  646.31 M/s    | 1585 ns      | 1584 ns     | 6.71x vs `malloc`                |
+| `std::mutex` (contended)           |  1.58  G/s     | 1360177 ns*  | 41481 ns*   | –                                |
+| `hpc::TTASSpinLock` (contended)    |  2.45  G/s     | 246487 ns*   | 26756 ns*   | 1.55x vs `std::mutex`            |
+| `std::queue` + `std::mutex` (MPMC) | 21.43 G/s      | 64743477 ns**  | 48920 ns**    | –                                |
+| `hpc::MPMCQueue`                   |  5.14 G/s      | 93139968 ns**  | 203850 ns**   | 0.24x vs `std::queue`+`std::mutex` |
 
 `*` Spinlock vs `std::mutex` numbers are from a contended critical-section benchmark
 (`benchmarks/bench_spinlock.cpp`) with multiple threads incrementing a shared
 counter; the absolute nanoseconds include benchmark harness overhead and should
 be interpreted relatively. Wall time reflects end-to-end duration including
 blocking/scheduling; CPU time reflects active CPU work per iteration.
+
+`**` MPMC throughput numbers are from a 2‑producer / 2‑consumer benchmark pushing
+1,048,576 items per producer (`benchmarks/bench_mpmc_ring_buffer.cpp`). In this
+particular microbenchmark, `std::queue` protected by a single `std::mutex` is
+faster than the lock‑free `hpc::core::mpmc_ring_buffer`. This is **expected**:
+
+- The critical section around `std::queue` is extremely small (push/pop on a
+  pre-allocated container with no dynamic allocation in the hot path), so
+  `std::mutex` can remain very efficient.
+- The lock‑free MPMC queue pays additional per-slot overhead (sequence counters,
+  extra atomics, CAS loops) to provide multi‑producer/multi‑consumer semantics
+  without a central lock and to avoid classic ABA issues.
+- Under light contention with few threads and a tiny critical section, the cost
+  of those extra atomics can outweigh the cost of taking a uncontended or
+  mildly contended `std::mutex`.
+
+The MPMC implementation in this repository is tuned for **scalability and
+predictable behavior under higher contention and more complex pipelines**, not
+for winning every synthetic microbenchmark against a single `std::mutex`. 
 
 These numbers are not synthetic micro‑optimizations; they map directly to real workloads:
 
