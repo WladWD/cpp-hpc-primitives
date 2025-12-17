@@ -27,6 +27,9 @@ public:
     std::size_t capacity() const noexcept { return capacity_bytes_; }
     std::size_t used() const noexcept { return static_cast<std::size_t>(ptr_ - begin_); }
 
+    void* data() noexcept { return begin_; }
+    const void* data() const noexcept { return begin_; }
+
 private:
     std::byte* begin_{};
     std::byte* end_{};
