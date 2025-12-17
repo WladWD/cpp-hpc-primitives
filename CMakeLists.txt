@@ -18,8 +18,10 @@ add_library(hpc_core
     src/arena_allocator.cpp
     src/pool_allocator.cpp
     src/ipc/shm_ring_buffer.cpp
-    src/support/cpu_topology.cpp
     src/support/clock.cpp
+    src/support/cpu_topology.cpp
+    src/huge_pages.cpp
+    src/numa_arena.cpp
 )
 
 hpc_enable_strict_warnings(hpc_core)
