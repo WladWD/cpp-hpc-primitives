@@ -166,17 +166,20 @@ All numbers below are from a local development machine; they are intended to sho
 relative speedups rather than absolute limits. Exact hardware and compiler flags
 are recorded in the benchmark output.
 
-| Component                          | Operations/sec | Wall time (ns) | CPU time (ns) | Baseline                         |
-|------------------------------------|----------------|--------------|-------------|----------------------------------|
-| `std::queue` (SPSC baseline)       |   719.83 M/s   | 1423 ns      | 1423 ns     | –                                |
-| `hpc::SPSCQueue`                   | 1.05306 G/s    | 973 ns       | 972 ns      | 1.46x vs `std::queue`            |
-| `malloc`                           |    96.24 M/s   | 10642 ns     | 10640 ns    | –                                |
-| `hpc::arena_allocator`             |  437.73 M/s    | 2340 ns      | 2339 ns     | 4.55x vs `malloc`                |
-| `hpc::pool_allocator`              |  646.31 M/s    | 1585 ns      | 1584 ns     | 6.71x vs `malloc`                |
-| `std::mutex` (contended)           |  1.58  G/s     | 1360177 ns*  | 41481 ns*   | –                                |
-| `hpc::TTASSpinLock` (contended)    |  2.45  G/s     | 246487 ns*   | 26756 ns*   | 1.55x vs `std::mutex`            |
-| `std::queue` + `std::mutex` (MPMC) | 21.43 G/s      | 64743477 ns**  | 48920 ns**    | –                                |
-| `hpc::MPMCQueue`                   |  5.14 G/s      | 93139968 ns**  | 203850 ns**   | 0.24x vs `std::queue`+`std::mutex` |
+| Component                          | Operations/sec | Wall time (ns) | CPU time (ns) | Baseline                        |
+|------------------------------------|----------------|----------------|---------------|---------------------------------|
+| `std::queue` (SPSC baseline)       |   722.06 M/s   | 1419 ns        | 1418 ns       | –                               |
+| `hpc::SPSCQueue`                   | 1.05453 G/s    | 971 ns         | 971 ns        | 1.46x vs `std::queue`           |
+| `malloc`                           |    96.24 M/s   | 10641 ns       | 10640 ns      | –                               |
+| `hpc::arena_allocator`             |  441.39 M/s    | 2320 ns        | 2320 ns       | 4.59x vs `malloc`               |
+| `hpc::pool_allocator`              |  671.70 M/s    | 1525 ns        | 1524 ns       | 6.98x vs `malloc`               |
+| `std::mutex` (contended)           |  1.63  G/s     | 1456410 ns*    | 40318 ns*     | –                               |
+| `hpc::TTASSpinLock` (contended)    |  2.58  G/s     | 250749 ns*     | 25410 ns*     | 1.59x vs `std::mutex`           |
+| `std::queue` + `std::mutex` (MPMC) | 21.56 G/s      | 59646021 ns**  | 48640 ns**    | –                               |
+| `hpc::MPMCQueue`                   |  5.35 G/s      | 90331722 ns**  | 195950 ns**   | 0.25x vs `std::queue`+`std::mutex` |
+| `malloc` (1 MiB)                   |        –       | 13.7 ns***     | 13.7 ns***    | –                               |
+| `new[]` (1 MiB)                    |        –       | 15.5 ns***     | 15.5 ns***    | –                               |
+| `huge_page_alloc` (1 MiB)         |        –       | 1.12 ns***     | 1.12 ns***    | ~12x faster vs `malloc`/`new[]` |
 
 `*` Spinlock vs `std::mutex` numbers are from a contended critical-section benchmark
 (`benchmarks/bench_spinlock.cpp`) with multiple threads incrementing a shared
@@ -198,6 +201,12 @@ faster than the lock‑free `hpc::core::mpmc_ring_buffer`. This is **expected**:
 - Under light contention with few threads and a tiny critical section, the cost
   of those extra atomics can outweigh the cost of taking a uncontended or
   mildly contended `std::mutex`.
+
+`***` `BM_Malloc_Free`, `BM_New_Delete`, and `BM_HugePageAlloc_Free` results are
+from `benchmarks/bench_numa_hugepages.cpp` with 1 MiB and 16 MiB allocation
+sizes. The table reports representative 1 MiB numbers; huge page allocation is
+shown here as a best-case microbenchmark and actual benefit depends on OS
+configuration (Linux `MAP_HUGETLB`, Windows `MEM_LARGE_PAGES`) and privileges.
 
 The MPMC implementation in this repository is tuned for **scalability and
 predictable behavior under higher contention and more complex pipelines**, not
@@ -266,4 +275,3 @@ ctest --output-on-failure
 ./benchmarks/hpc_benchmarks
 ```
 
----
