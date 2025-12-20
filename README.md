@@ -275,3 +275,52 @@ ctest --output-on-failure
 ./benchmarks/hpc_benchmarks
 ```
 
+---
+
+## 5. IPC & Heterogeneous Compute Examples
+
+To illustrate the "C++ → Python/GPU" story, this repo includes a concrete
+shared-memory example:
+
+- `examples/shm_publisher.cpp`: C++ process that creates a
+  `hpc::ipc::shm_spsc_ring_buffer<Message>` in a POSIX shared memory region and
+  publishes fixed-size `Message` structs.
+- `examples/shm_subscriber.py`: Python process that attaches to the same POSIX
+  shared memory object (via `posix_ipc.SharedMemory("/hpc_shm_spsc_ring")`)
+  and decodes messages with `struct.Struct("<QQ48s")`. On Linux this object
+  also appears under `/dev/shm`, but on macOS it is only visible via the
+  POSIX shared-memory APIs.
+- `docs/shm_ipc_design.md`: Design notes for multi-subscriber shared-memory
+  rings, backpressure policies, and how to feed data into PyTorch models.
+
+The `Message` layout is intentionally simple and stable so that non-C++
+consumers (Python, CUDA kernels) can treat the shared memory region as a
+read-only array of records without any C++ ABI dependencies.
+
+To build the example publisher:
+
+```bash
+cmake -S . -B build \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DHPC_ENABLE_TESTS=ON \
+      -DHPC_ENABLE_BENCHMARKS=ON \
+      -DHPC_ENABLE_EXAMPLES=ON
+cmake --build build -j
+```
+
+Run the publisher (C++):
+
+```bash
+./build/hpc_shm_publisher
+```
+
+Then in a separate shell, run the Python subscriber:
+
+```bash
+python3 examples/shm_subscriber.py
+```
+
+On a real trading platform, this pattern can be extended so that a C++ feed
+handler or matching engine publishes feature vectors into shared memory, while
+Python/PyTorch consumers batch them into tensors and feed GPU models with very
+little overhead.
