@@ -4,6 +4,7 @@ project(cpp-hpc-primitives VERSION 0.1.0 LANGUAGES CXX)
 option(HPC_ENABLE_TESTS "Build unit tests" ON)
 option(HPC_ENABLE_BENCHMARKS "Build benchmarks" ON)
 option(HPC_ENABLE_SANITIZERS "Enable Address/Undefined sanitizers" OFF)
+option(HPC_ENABLE_EXAMPLES "Build examples" ON)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -43,4 +44,9 @@ endif()
 
 if(HPC_ENABLE_BENCHMARKS)
     add_subdirectory(benchmarks)
+endif()
+
+if(HPC_ENABLE_EXAMPLES)
+    add_executable(hpc_shm_publisher examples/shm_publisher.cpp)
+    target_link_libraries(hpc_shm_publisher PRIVATE hpc_core)
 endif()
