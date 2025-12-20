@@ -37,7 +37,7 @@ For heterogeneous consumers (Python, CUDA, etc.) the important guarantees are:
 
 - `T` has a fixed, known layout (POD / standard-layout struct).
 - No internal pointers or ownership; all fields are plain integers/floats.
-- Endianness is little-endian (matching x86_64 and most trading infra).
+- Endianness is little-endian (matching x86_64).
 
 ## 2. Example: C++ publisher → Python subscriber
 
@@ -130,7 +130,7 @@ There are three main strategies:
      `min_head` by one (drop oldest) and move any `head[i]` that is still
      behind up to `min_head`.
 
-For a trading system, strategy (2) is typically the most attractive: critical
+For a HPC system, strategy (2) is typically the most attractive: critical
 subscribers (risk, persistence) have large or infinite `max_lag`, whereas
 non-critical analytics consumers have tight `max_lag` and accept drops.
 

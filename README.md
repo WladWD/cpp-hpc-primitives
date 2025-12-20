@@ -3,7 +3,7 @@
 High-performance C++23 primitives for low-latency and real‑time systems.
 
 This repository is structured as a small, focused "standard library replacement" for
-HFT-style workloads: single/multi-core pipelines, fixed-capacity queues, custom
+HPC-style workloads: single/multi-core pipelines, fixed-capacity queues, custom
 allocators, and shared‑memory IPC, all built with explicit attention to cache
 behavior, memory ordering, and observability.
 
@@ -73,11 +73,6 @@ Key design points:
   across producer/consumer boundaries with `memory_order_relaxed` for local
   progress where safe. Comments in the implementation document the required
   happens‑before relationships per operation.
-
-Typical HFT uses:
-
-- Per‑symbol or per‑feed SPSC queues in a market data handler.
-- Intra‑process handoff between a strategy thread and a risk/aggregation thread.
 
 ### 2.2 Linear / arena allocator
 
@@ -320,7 +315,3 @@ Then in a separate shell, run the Python subscriber:
 python3 examples/shm_subscriber.py
 ```
 
-On a real trading platform, this pattern can be extended so that a C++ feed
-handler or matching engine publishes feature vectors into shared memory, while
-Python/PyTorch consumers batch them into tensors and feed GPU models with very
-little overhead.
