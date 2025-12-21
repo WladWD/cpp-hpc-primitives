@@ -5,6 +5,7 @@ option(HPC_ENABLE_TESTS "Build unit tests" ON)
 option(HPC_ENABLE_BENCHMARKS "Build benchmarks" ON)
 option(HPC_ENABLE_SANITIZERS "Enable Address/Undefined sanitizers" OFF)
 option(HPC_ENABLE_EXAMPLES "Build examples" ON)
+option(HPC_ENABLE_NUMA "Enable NUMA (libnuma) support when available" ON)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -22,8 +23,27 @@ add_library(hpc_core
     src/support/clock.cpp
     src/support/cpu_topology.cpp
     src/huge_pages.cpp
-    src/numa_arena.cpp
 )
+
+# Optional NUMA support (Linux libnuma).
+if(HPC_ENABLE_NUMA)
+    include(CheckIncludeFileCXX)
+    include(CheckLibraryExists)
+
+    check_include_file_cxx("numa.h" HPC_HAS_NUMA_H)
+    check_library_exists(numa numa_available "" HPC_HAS_LIBNUMA)
+
+    if(HPC_HAS_NUMA_H AND HPC_HAS_LIBNUMA)
+        target_sources(hpc_core PRIVATE src/numa_arena.cpp)
+        target_link_libraries(hpc_core PRIVATE numa)
+        target_compile_definitions(hpc_core PUBLIC HPC_HAS_NUMA=1)
+    else()
+        message(STATUS "libnuma not found (numa.h and/or -lnuma missing). Building without NUMA support.")
+        target_compile_definitions(hpc_core PUBLIC HPC_HAS_NUMA=0)
+    endif()
+else()
+    target_compile_definitions(hpc_core PUBLIC HPC_HAS_NUMA=0)
+endif()
 
 hpc_enable_strict_warnings(hpc_core)
 

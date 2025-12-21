@@ -5,6 +5,7 @@
 #if defined(__linux__)
 #include <sys/mman.h>
 #include <unistd.h>
+#include <cstdio>
 #elif defined(_WIN32)
 #define NOMINMAX
 #include <windows.h>
@@ -12,16 +13,43 @@
 
 namespace hpc::support {
 
+#if defined(__linux__)
+namespace {
+[[nodiscard]] std::size_t linux_huge_page_size_bytes() noexcept
+{
+    // _SC_HUGEPAGESIZE is not available on all libcs (e.g. it may be missing on
+    // some glibc configurations / non-glibc libcs). Query /proc/meminfo instead.
+    // Format example: "Hugepagesize:       2048 kB".
+    std::size_t kb = 0;
+    if (FILE* f = std::fopen("/proc/meminfo", "r")) {
+        char line[256];
+        while (std::fgets(line, sizeof(line), f) != nullptr) {
+            // NOLINTNEXTLINE(cert-err34-c): best-effort parse
+            if (std::sscanf(line, "Hugepagesize:%zu kB", &kb) == 1) {
+                break;
+            }
+        }
+        std::fclose(f);
+    }
+
+    if (kb == 0) {
+        return 0;
+    }
+
+    return kb * 1024u;
+}
+} // namespace
+#endif
+
 [[nodiscard]] huge_page_region huge_page_alloc(std::size_t size) noexcept
 {
     huge_page_region region{};
 
 #if defined(__linux__)
-    // Best-effort attempt to use anonymous huge pages. If this fails, we
+    // Best-effort attempt to use explicit huge pages. If this fails, we
     // gracefully fall back to regular anonymous pages.
-    long hpage_size = ::sysconf(_SC_HUGEPAGESIZE);
-    if (hpage_size > 0) {
-        std::size_t hp = static_cast<std::size_t>(hpage_size);
+    const std::size_t hp = linux_huge_page_size_bytes();
+    if (hp != 0) {
         std::size_t rounded = (size + hp - 1) & ~(hp - 1);
 
         void* ptr = ::mmap(nullptr, rounded,
