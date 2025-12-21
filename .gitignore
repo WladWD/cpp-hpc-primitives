@@ -23,6 +23,7 @@ Makefile
 # Build directories (common)
 build/
 build-fix/
+build_ci/
 out/
 dist/
 results/

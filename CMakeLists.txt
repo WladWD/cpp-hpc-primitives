@@ -5,7 +5,7 @@ option(HPC_ENABLE_TESTS "Build unit tests" ON)
 option(HPC_ENABLE_BENCHMARKS "Build benchmarks" ON)
 option(HPC_ENABLE_SANITIZERS "Enable Address/Undefined sanitizers" OFF)
 option(HPC_ENABLE_EXAMPLES "Build examples" ON)
-option(HPC_ENABLE_NUMA "Enable NUMA (libnuma) support when available" OFF)
+option(HPC_ENABLE_NUMA "Enable NUMA (libnuma) support when available" ON)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
